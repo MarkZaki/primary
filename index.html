@@ -172,7 +172,21 @@
           });
       }
 
-
+      /* Update a users profile information 
+          payload: {
+            location: 'Lagos, Nigeria',
+            bio: 'A software developer writing code everyday',
+            website_url: 'https://github.com/tvpeter',
+            dob: '03/23/2000',
+          }
+      */
+      User.profile = function(payload) {
+        fetch('/api/user/profile', make(payload))
+          .then(promise => promise.json())
+          .then(json => {
+            console.log(json);
+          });
+      };
 
       // Because this is <script type = "module", to make User object
       // globally available so it can be used in HTML attribute events,
@@ -254,6 +268,22 @@
           onclick="Password.reset({password: 'secret', password_confirmation: 'secret'})"
           value="reset password"
         /><br />
+
+        <h6>User profile update</h6>
+        <input type="text" id="user_location" placeholder="Update location" name="location">
+        <input type="url" id="website_url" placeholder="Website" name="website_url">
+        <input type="date" id="dob" placeholder="date of birth" name="dob"><br>
+        <textarea name="bio" id="bio" cols="30" rows="5" placeholder="update your bio"></textarea>
+          <input type="submit" value="Update Profile user.id=1" onclick="
+          User.profile(
+            { 
+            location: window.user_location.value,
+            website_url: window.website_url.value,
+            dob:window.dob.value,
+            bio: window.bio.value,
+            id: 1,
+           }
+          )"/>
       </div>
     </div>
     <div id="footer">2020 Primary. Copyright Something Something.</div>

@@ -50,7 +50,7 @@ Object.prototype.exists = function (property_name, value) {
 // Check if value exists in array
 Array.prototype.exists = function (value) {
     for (let i = 0; i < this.length; i++)
-        if (this[i] == value)
+        if (this[i] == value) 
             return true;
     return false;
 }
@@ -358,6 +358,46 @@ function action_post_tweet(request, payload) {
     }).catch((error) => { console.log(error) });
 }
 
+function action_update_user_profile(request, payload) {
+    return new Promise((resolve, reject) => {
+        // Header or payload are missing
+        if (!request || !request.headers || !payload)
+            reject("Error: Wrong request, missing request headers, or missing payload");
+        // Payload must specify user id
+        if (!payload.id)
+            reject("User id not specified!");
+        // Columns allowed to be changed:
+        let allowed = ["id", "location", "website_url", "dob", "bio"];
+        // Exclude not-allowed fields from payload
+        Object.entries(payload).map((value, index, obj) => {
+            let name = value[0];
+            if (!allowed.exists(name)) delete payload[name];
+        });
+        // Start MySQL query
+        let query = "UPDATE user SET ";
+        // Build the rest of MySQL query from payload
+        Object.entries(payload).map((item, index, object) => {
+            let name = item[0];
+            let value = payload[name];
+            index != 0 ? query += ", " : null;
+            query += "`" + name + "` = '" + value + "'";
+        });
+        // End query
+        query += " WHERE `id` = '" + payload.id + "'";
+        // Execute MySQL query we just created
+        database.connection.query(query, (error, results) => {
+            if (error)
+                throw (error);
+            let result = results[0];
+            console.log("results[0] = ", results[0]);
+            console.log("result = ", result);
+            resolve(`{"success": true, "message": "user profile updated successfully!"}`);
+        });
+
+    }).catch(error => null);
+}
+
+
 // Check if API.parts match a URL pattern, example: "api/user/get"
 function identify(a, b) {
     return API.parts[0] == "api" && API.parts[1] == a && API.parts[2] == b;
@@ -391,6 +431,7 @@ Action.send_reset_link = action_send_reset_link;
 Action.reset_password = action_reset_password;
 Action.reset_password = action_reset_password;
 Action.post_tweet = action_post_tweet;
+Action.update_profile= action_update_user_profile;
 
 const resp = response => content => respond(response, content);
 
@@ -464,10 +505,14 @@ class API {
                 if (identify("tweet", "post")) // Post a "tweet"
                     Action.post_tweet(request, json(request.chunks))
                         .then(content => respond(response, content));
+
+                if (identify("user", "profile")) // Update user profile
+                    Action.update_profile(request, json(request.chunks))
+                        .then(content => respond(response, content));
             });
         }
 
-        if (request.method == 'GEt') {
+        if (request.method == 'GET') {
             /* GET placeholder */
         }
     }
