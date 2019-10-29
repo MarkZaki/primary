@@ -2,3 +2,4 @@ module/config/db_config.json
 node_modules/
 primary.sql
 .DS_Store
+.idea/
